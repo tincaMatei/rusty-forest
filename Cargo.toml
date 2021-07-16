@@ -1,0 +1,16 @@
+[package]
+name = "rusty-forest"
+version = "0.1.0"
+authors = ["DankusMemusXXX <14098249+tincaMatei@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+termion="1.0.0"
+hex="0.4.3"
+getopts="0.2"
+regex="1.5.4"
+rand="0.8.4"
+chrono="0.4"
+itertools="0.10"
