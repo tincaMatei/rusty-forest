@@ -2,7 +2,7 @@ use termion::{color, style, cursor};
 use std::str::FromStr;
 use std::io::{Write, stdout};
 use std::string::ToString;
-use std::fs::{self, DirBuilder, OpenOptions};
+use std::fs::{self, File, DirBuilder, OpenOptions};
 use regex::Regex;
 use std::env;
 use std::default::Default;
@@ -104,7 +104,6 @@ impl Tree {
     
     pub fn import_tree(tree: String) -> Result<Tree, String> {
         if !Tree::is_legit(&tree) {
-            println!("asdfasdfasdf {}$\n", tree);
             return Err("The tree does not respect the format".to_string());
         }
 
@@ -230,20 +229,12 @@ impl TreeCollection {
         Err(x) => { return Err(format!("{}", x)); }
         };
         
-        let file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(home + &"/.rusty-forest/trees.conf");
-
-        let mut file_res = match file {
-        Err(x) => { return Err(format!("{}", x)); }
-        Ok(x)  => { x }
-        };
+        let mut file = File::create(home + &"/.rusty-forest/trees.conf").unwrap();
 
         for tree in &self.collection {
-            file_res.write_all((tree.to_string() + &"\n").as_bytes());
+            file.write_all((tree.to_string() + &"\n").as_bytes()).unwrap();
         }
-
+        
         Ok(())
     }
 }
@@ -328,7 +319,7 @@ pub fn get_stats() -> Result<Vec<GrownTree>, String> {
         let tree = GrownTree::from_str(line);
         match tree {
         Ok(x) => { trees.push(x); }
-        Err(x) => { }
+        Err(x) => { println!("Failed to load tree: {}", x); }
         }
     }
 

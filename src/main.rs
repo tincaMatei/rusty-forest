@@ -31,8 +31,9 @@ Commands: grow          grow a tree
           import        import a tree from other people
           export        export trees to share with other people
           list          list all created/imported trees
-          stats         display stats about all grown trees", program, program);
-    
+          stats         display stats about all grown trees
+          erase         erase a tree from the collection", program, program);
+
     print!("{}", opts.usage(&brief));
 }
 
@@ -130,6 +131,19 @@ fn build_stats_opts() -> Options {
     opts.optopt("c", "count", "display only the most recent trees", "AMOUNT");
     opts.optopt("t", "time", "get information only from a certain time period", "TIME");
     opts.optopt("F", "format", "display dates in a custom format; default is %d-%m-%Y %H:%M", "FORMAT");
+
+    opts
+}
+
+fn print_erase_usage(program: &str, opts: Options) {
+    let brief = format!("Usage: {} erase TREES", program);
+    print!("{}", opts.usage(&brief));
+}
+
+fn build_erase_opts() -> Options {
+    let mut opts = Options::new();
+
+    opts.optflag("h", "help", "display this help menu");
 
     opts
 }
@@ -690,6 +704,30 @@ fn main() {
 
         for tree in stats {
             println!("{} | {} | {:02}:{:02}", tree.label, Local.timestamp(tree.timestamp, 0).format(&format), tree.duration / 60, tree.duration % 60);
+        }
+    }
+
+    "erase" => {
+        let opts = build_erase_opts();
+        let matches = opts.parse(&args[2..]).unwrap();
+    
+        if matches.opt_present("h") {
+            print_erase_usage(&program, opts);
+            return;
+        }
+        
+        if matches.free.is_empty() {
+            print_erase_usage(&program, opts);
+            return;
+        }
+
+        for to_erase in matches.free {
+            trees.collection.retain(|tree| { tree.name != to_erase } );
+        }
+    
+        match trees.save() {
+        Err(x) => { println!("Failed to save trees: {}", x); return; }
+        _ => {}
         }
     }
 
