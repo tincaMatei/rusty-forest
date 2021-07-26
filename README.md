@@ -22,6 +22,7 @@ For more detailed information, check the [documentation](https://github.com/tinc
 
 * ~~fix all 60-70 warnings~~
 * ~~documentation page~~
+* make sure that the README.md, Cargo.toml and everything is alright before uploading to [crates.io](www.crates.io).
 * make a man page
 * show import/export statistics
 * make it prettier

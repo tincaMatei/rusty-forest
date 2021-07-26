@@ -5,6 +5,12 @@ authors = ["TincaMatei <tinca.matei02@gmail.com>"]
 edition = "2018"
 license = "MIT"
 description = "A small terminal application based on the Forest app for mobile."
+homepage = "https://github.com/tincaMatei/rusty-forest"
+readme = "README.md"
+documentation = "https://github.com/tincaMatei/rusty-forest/blob/main/DOCS.md"
+repository = "https://github.com/tincaMatei/rusty-forest"
+categories = ["command-line-utilities"]
+keywords = ["cli", "productivity", "forest"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
