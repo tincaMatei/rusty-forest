@@ -1,26 +1,32 @@
 use std::str::FromStr;
 use std::string::ToString;
-use crate::tree::{Cell, Tree};
+use crate::tree::{Tree};
 use crate::display::Display;
 use crate::editor::{BACKGROUND_GREEN, FOREST_BORDERS};
 use std::time::{Duration, Instant};
-use std::io::{Read, Write, stdout};
-use std::fs::{self, DirBuilder, OpenOptions};
-use rand::{thread_rng, Rng};
+use std::io::{Read, Write};
+use std::fs::{OpenOptions};
+use rand::{Rng};
 use termion::terminal_size;
 use termion::async_stdin;
 use termion::event::{Event, Key};
-use chrono::{Local};
 
+/// Error message when the screen is too small.
 const GROW_SMALL_SCREEN_ERROR: &str = "The screen is too small, so the editor cannot be displayed properly. Make it larger (at least 25x26)";
-const POSITIVE: [&str; 2] = ["asdf", "fdas"];
 
-pub struct GrowthTime {
-    pub h: u64,
+/// Positive messages that are displayed each 5 minutes.
+const POSITIVE: [&str; 3] = ["You're doing great, keep it up!", 
+                             "You're getting closed, good job!",
+                             "Why are you reading this? Get back to work!"];
+
+/// The ammount of time used to grow a tree.
+pub struct GrowthTime { // This feels kinda stupid, I should just use minutes
+    pub h: u64,         // Also u64 feels really unnecessary, probably an u16 would be better
     pub m: u64,
 }
 
 impl GrowthTime {
+    /// Returns the ammount of minutes equivalent to the GrowthTime
     pub fn to_min(&self) -> u64 {
         return self.h * 60 + self.m;
     }
@@ -29,6 +35,7 @@ impl GrowthTime {
 impl FromStr for GrowthTime {
     type Err = String;
 
+    /// Parse a time duration from a string.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split(':').collect();
 
@@ -54,11 +61,14 @@ impl FromStr for GrowthTime {
 }
 
 impl ToString for GrowthTime {
+    /// Convert a time duration to a string.
     fn to_string(&self) -> String {
         format!("{}:{}", self.h, self.m)
     }
 }
 
+/// Grow a tree. This implies waiting for the ammount of time requested by the user,
+/// ocasionally send positive messages, and display a fancy menu if nogui is true.
 pub fn grow_tree(chosen_tree: Tree, label: String, time: GrowthTime, nogui: bool) {
     if nogui {
         println!("Started growing your tree!");
@@ -184,7 +194,8 @@ pub fn grow_tree(chosen_tree: Tree, label: String, time: GrowthTime, nogui: bool
         Ok(x)  => { x }
         };
         
-        file_res.write_all(format!("{}/{}/{}/{}\n", time.to_string(), label, chrono::offset::Local::now().timestamp(), chosen_tree.to_string()).as_bytes());
+        file_res.write_all(format!("{}/{}/{}/{}\n", time.to_string(), label, chrono::offset::Local::now().timestamp(), chosen_tree.to_string()).as_bytes())
+            .expect("Failed to write to file");
     }
 } 
 

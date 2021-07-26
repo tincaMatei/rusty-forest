@@ -1,40 +1,47 @@
 extern crate termion;
 
 use crate::tree::Tree;
-use termion::raw::IntoRawMode;
 use termion::async_stdin;
-use termion::{color, style, cursor};
 use termion::event::{Event, Key};
-use termion::input::TermRead;
-use termion::screen::*;
 use termion::terminal_size;
-use std::io::{Read, Write, stdout};
+use std::io::{Read};
 use std::thread;
 use std::time::Duration;
 use crate::display::Display;
 use crate::tree::Cell;
 
+/// Error displayed when the screen is too small.
 const SMALL_SCREEN_ERROR: &str = "The screen is too small, so the editor cannot be displayed properly. Make it larger (at least 22x30)";
+
+/// Editor instructions displayed on the right side.
 const INSTRUCTIONS: &str = "Walk around with the arrow keys. Change colors with the menu below. To draw a character, just press the character to print. For a clear square, use Space. After finishing this, press Enter. To exit the editor without saving anything, use CTRL+c.";
+
+/// Instructions that appear when naming the tree.
 const NAME_TREE: &str = "Now you should give a name to your tree. It should only contain letters, digits, spaces and '-' or '_'";
 
+/// An enum used to hold the editor state. This will be either EditTree, which means 
+/// that the editor is used to actually create the tree, and NameTree, which means that 
+/// here, a name should be given to the tree. Essentially, there are two menus.
 enum EditorState {
     EditTree,
     NameTree,
 }
 
+/// The color used on the background, the fg color is used on the text.
 pub const BACKGROUND_GREEN: Cell = Cell {
     bg: (44, 77, 52), 
     fg: (117, 199, 139),
     symbol: ' ',
 };
 
+/// The color used for the borders on the editor or growth menus.
 pub const FOREST_BORDERS: Cell = Cell {
     bg: (14, 48, 23),
     fg: (0, 0, 0),
     symbol: ' ',
 };
 
+/// Start the tree editor that returns the created tree.
 pub fn run_tree_editor() -> Tree {
     let mut stdin = async_stdin().bytes();
     let mut exit_program = false;
@@ -214,7 +221,7 @@ pub fn run_tree_editor() -> Tree {
                 if l <= height && c <= width {
                     display.draw_pixel(l, c, BACKGROUND_GREEN.change_symbol(chr as char) );
                     c = c + 1;
-                    if(c > width) {
+                    if c > width {
                         c = 1;
                         l = l + 1;
                     }

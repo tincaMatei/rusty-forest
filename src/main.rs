@@ -1,3 +1,138 @@
+//! # Rusty-forest
+//!
+//! rusty-forest is a terminal application inspired by [Forest](https://www.forestapp.cc). The 
+//! difference is that this doesn't monitor what you do, so it works just as a "dopamine button". 
+//! If you procrastinate while your tree is growing, nothing is going to happen, you're just 
+//! lying to yourself.
+//!
+//! ## Installation
+//!
+//! Run
+//!
+//! > cargo install rusty-forest
+//!
+//! ## Usage
+//!
+//! For quick information, you can use
+//!
+//! > rusty-forest --help
+//!
+//! ## Subcommands
+//!
+//! ### grow
+//!
+//! This is the core subcommand of rusty-forest. Using this will start the process of 
+//! growing a tree. You can label this tree with other names to get better statistics.
+//! You can set a custom duration for the tree. By doing so, you can plant more colorful 
+//! trees.
+//!
+//! Options:
+//!
+//! * -d, --duration TIME
+//!   * set a custom duration for the tree in HH:MM format. For instance, having
+//!     "-d 01:20" means that the tree will take 1 hour and 20 minutes to grow.
+//!     The default duration is 20 minutes.
+//! * -l, --label LABEL
+//!   * set a custom label for the growing tree. This is useful for instance
+//!     if you want to monitor how much time you're spending on each activity.
+//!     For example, if you have "-l coding", that means that this tree is dedicated 
+//!     for coding. This is useful for stats. The default label is "standard".
+//! * -t, --tree TREE
+//!   * Grow a custom tree from your tree collection. TREE should be the name.
+//!     The default tree used is called "default".
+//! * -n, --no-display
+//!   * do not display the growing menu, just get messages through stdout.
+//!
+//! ### import
+//!
+//! With this command, you can add more trees to your collection, by either creating them, 
+//! with the tree editor, or by importing from other people.
+//!
+//! Arguments:
+//!
+//! If you do not use `-c` or `-f`, then you should put multiple trees in their shareable
+//! format.
+//!
+//! Options:
+//!
+//! * -f, --file FILE
+//!   * Import all the trees from a file. They should be each on a separate line, 
+//!     in their format
+//! * -c, --create
+//!   * Use the tree editor to create a tree. It will be directly added to the collection.
+//!     Using this 
+//! * -n, --name-change
+//!   * Rename the trees if they have the same name. For instance, if there is a tree called 
+//!     "tree", and you want to add another tree named "tree", the second one will be renamed 
+//!     to "tree-1"
+//!
+//! ### export
+//!
+//! With this command, you can share some of your trees with other people.
+//!
+//! Arguments:
+//!
+//! If you do not use `-c` or `-f`, then you should put the names of the trees you want 
+//! to share.
+//!
+//! Options:
+//!
+//! * -f, --to-file FILE
+//!   * Export the wanted trees to the given file.
+//! * -c, --create
+//!   * Open the tree editor and export the created tree.
+//! * -a, --all
+//!   * Export all the trees from your collection.
+//!
+//! ### list
+//!
+//! Display all the trees from your collection that you can choose to grow.
+//!
+//! Options:
+//!
+//! * -H, --head COUNT
+//!   * Display the first COUNT trees from your collection.
+//! * -T, --tail COUNT
+//!   * Display the last COUNT trees from your collection.
+//! * -r, --random COUNT
+//!   * display COUNT random trees from your collection.
+//! * -n, --no-draw
+//!   * just list the name of the trees, without actually drawing them.
+//! * -e, --export
+//!   * display the selected trees in an exportable format
+//!
+//! ### erase
+//!
+//! Erase trees from your collection that you don't want to use anymore.
+//!
+//! Arguments:
+//!
+//! Put all the names of the trees that you want to delete from your collection.
+//!
+//! ### stats
+//!
+//! Display stats about trees that you've grown. If you do not use -g or -G, then
+//! this will just display the trees that you've grown.
+//!
+//! Options:
+//!
+//! * -g, --grid GRID
+//!   * Display the trees in a fixed grid size. The size should be in RxC format, for 
+//!     instance "3x4" for 3 rows and 4 columns. Additionally, you can use "whole" to
+//!     use a grid as big as the screen.
+//! * -G, --graph UNIT
+//!   * Display a graph of the relevant time unit. The possible time windows are
+//!     daily, weekly, monthly and yearly.
+//! * -f, --filter LABEL
+//!   * Take only the information of the trees with the given label.
+//! * -c, --count AMOUNT
+//!   * Take only the last AMOUNT trees that you've grown.
+//! * -t, --time TIME
+//!   * Get information only from a certain time period. The time period options are
+//!     "today", "yesterday", "this-week", "this-month" and "this-year".
+//! * -F, --format FORMAT
+//!   * Display the dates in a custom format; the default is "%d-%m-%Y %H:%M"
+
 extern crate getopts;
 use getopts::Options;
 use std::env;
@@ -8,11 +143,11 @@ use crate::grow::{GrowthTime, grow_tree};
 use std::io::{Write, stdout};
 use std::str::FromStr;
 use std::cmp;
-use termion::{color, style, cursor, terminal_size};
+use termion::{color, terminal_size};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 use regex::Regex;
-use chrono::{Local, TimeZone, Datelike, DurationRound, Duration, DateTime, Date};
+use chrono::{Local, TimeZone, Datelike, DurationRound, Duration, DateTime};
 use itertools::Itertools;
 
 pub mod tree;
@@ -20,8 +155,10 @@ pub mod editor;
 pub mod display;
 pub mod grow;
 
-const VERSION: &str = "0.1.0";
+/// rusty-forest version number.
+const VERSION: &str = "0.1.1";
 
+/// Print the entire usage of the program.
 fn print_whole_usage(program: &str, opts: Options) {
     let brief = format!(r"
 Usage: {} [OPTIONS]
@@ -37,10 +174,12 @@ Commands: grow          grow a tree
     print!("{}", opts.usage(&brief));
 }
 
+/// Print the program version.
 fn print_version(program: &str) {
     println!("{} {}", program, VERSION);
 }
 
+/// Build the basic opts for the program.
 fn build_default_opts() -> Options {
     let mut opts = Options::new();
     opts.optflag("h", "help", "display the help menu");
@@ -48,12 +187,14 @@ fn build_default_opts() -> Options {
     opts
 }
 
+/// Print the instructions for the import subprogram.
 fn print_import_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} import TREE", program);
     
     print!("{}", opts.usage(&brief));
 }
 
+/// Build the opts for the import subprogram.
 fn build_import_opts() -> Options {
     let mut opts = Options::new();
 
@@ -64,12 +205,14 @@ fn build_import_opts() -> Options {
     opts
 }
 
+/// Print the instructions for the list subprogram.
 fn print_list_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} list", program);
 
     print!("{}", opts.usage(&brief));
 }
 
+/// Build the opts for the list subprogram.
 fn build_list_opts() -> Options {
     let mut opts = Options::new();
 
@@ -82,12 +225,14 @@ fn build_list_opts() -> Options {
     opts
 }
 
+/// Print the instructions for the list subprogram.
 fn print_export_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} export NAME", program);
 
     print!("{}", opts.usage(&brief));
 } 
 
+/// Build the opts for the export subprogram.
 fn build_export_opts() -> Options {
     let mut opts = Options::new();
     
@@ -98,11 +243,13 @@ fn build_export_opts() -> Options {
     opts
 }
 
+/// Print the instructions for the grow subprogram.
 fn print_grow_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} grow", program);
     print!("{}", opts.usage(&brief));
 }
 
+/// Build the opts for the grow subprogram.
 fn build_grow_opts() -> Options {
     let mut opts = Options::new();
     
@@ -110,16 +257,18 @@ fn build_grow_opts() -> Options {
     opts.optopt("d", "duration", "set custom growth time; format is H:M; if omitted, the default is 20m", "TIME");
     opts.optopt("l", "label", "set a custom label for this tree", "LABEL");
     opts.optopt("t", "tree", "grow a custom tree", "TREE");
-    opts.optflag("n", "nod-display", "do not display the growing menu");
+    opts.optflag("n", "no-display", "do not display the growing menu");
 
     opts
 }
 
+/// Print the instructions for the stats subprogram.
 fn print_stats_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} stats", program);
     print!("{}", opts.usage(&brief));
 }
 
+/// Build the opts for the stats subprogram.
 fn build_stats_opts() -> Options {
     let mut opts = Options::new();
 
@@ -135,11 +284,13 @@ fn build_stats_opts() -> Options {
     opts
 }
 
+/// Print the instructions for the erase subprogram.
 fn print_erase_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} erase TREES", program);
     print!("{}", opts.usage(&brief));
 }
 
+/// Build the opts for the erase program.
 fn build_erase_opts() -> Options {
     let mut opts = Options::new();
 
@@ -265,7 +416,8 @@ fn main() {
             }
         }
         
-        trees.save();
+        trees.save()
+            .expect("Failed to save trees");
     }
     "export" => {
         let opts = build_export_opts();
@@ -331,7 +483,8 @@ fn main() {
             };
         
             for tree in exported {
-                file_res.write_all((tree + &"\n").as_bytes());
+                file_res.write_all((tree + &"\n").as_bytes())
+                    .expect("Failed to write data in file");
             }
         }
         None => {
@@ -353,7 +506,6 @@ fn main() {
     
         let draw_trees = !matches.opt_present("n");
         let exportable = matches.opt_present("e");
-        let mut cnt = 0;
         
         let mut head = match matches.opt_str("H") {
         Some(x) => { 
@@ -392,7 +544,7 @@ fn main() {
                 std::process::exit(1);
             }
             };
-            let mut rng = thread_rng();;
+            let mut rng = thread_rng();
             trees_order.shuffle(&mut rng);
         }
         _ => {}
@@ -412,7 +564,8 @@ fn main() {
                                 tree.display_symbol(l, c);
                             }
                             
-                            write!(stdout(), "{}{}\n", color::Bg(color::Reset), color::Fg(color::Reset));
+                            write!(stdout(), "{}{}\n", color::Bg(color::Reset), color::Fg(color::Reset))
+                                .expect("Failed to write");
                         }
                     }
                 }
@@ -442,7 +595,7 @@ fn main() {
         }
 
         match matches.opt_str("t") {
-        Some(mut t) => {
+        Some(t) => {
             let now = Local::now();
             
             t.to_lowercase();
@@ -570,26 +723,28 @@ fn main() {
                 for j in 0..6*m-1 {
                     if i % 6 == 5 {
                         if j % 6 == 5 {    
-                            write!(stdout(), "+");
+                            write!(stdout(), "+").expect("Failed to write");
                         } else {
-                            write!(stdout(), "-");
+                            write!(stdout(), "-").expect("Failed to write");
                         }
                     } else if j % 6 == 5 {
-                        write!(stdout(), "|");
+                        write!(stdout(), "|").expect("Failed to write");
                     } else {
                         let tree_line = i / 6;
                         let tree_col  = j / 6;
                         
                         match grid[tree_line][tree_col] {
                         Some(tree) => { tree.display_symbol(i % 6, j % 6); }
-                        None => {       write!(stdout(), " "); }
+                        None => {       write!(stdout(), " ").expect("Failed to write"); }
                         }
 
-                        write!(stdout(), "{}", termion::color::Fg(termion::color::Reset));
-                        write!(stdout(), "{}", termion::color::Bg(termion::color::Reset));
+                        write!(stdout(), "{}", termion::color::Fg(termion::color::Reset))
+                            .expect("Failed to write");
+                        write!(stdout(), "{}", termion::color::Bg(termion::color::Reset))
+                            .expect("Failed to write");
                     }
                 }
-                write!(stdout(), "\n");
+                write!(stdout(), "\n").expect("Failed to write");
             }
 
             return;
@@ -604,8 +759,6 @@ fn main() {
 
             let cnt_strips = (height - 1) / 3;
             
-            let now = Local::now();
-
             let (mut strips, mut last_time) = match time_option.as_str() {
             "daily"   => {
                  let mut data_grouped: Vec<(DateTime<Local>, u64)> = Vec::new();
@@ -647,7 +800,7 @@ fn main() {
 
             let mut strips_final: Vec<(String, u64)> = Vec::new();
 
-            for i in 0..cnt_strips {
+            for _ in 0..cnt_strips {
                 let date_format = match time_option.as_str() {
                 "daily" | "weekly" => { format!("{}", last_time.format("%d-%m")) }
                 "monthly" => { format!("{}", last_time.format("%m")) }
@@ -688,14 +841,14 @@ fn main() {
             let max_width = width - 1 - strips_final[0].0.len();
 
             for stat in &strips_final {
-                write!(stdout(), "\n{}|", stat.0);
-                write!(stdout(), "{}", color::Bg(color::Rgb(0, 0, 0)));
+                write!(stdout(), "\n{}|", stat.0).expect("Failed to write");
+                write!(stdout(), "{}", color::Bg(color::Rgb(0, 0, 0))).expect("Failed to write");
                 let ammount = (max_width as u64) * stat.1 / max_time;
-                for i in 0..ammount {
-                    write!(stdout(), " ");
+                for _ in 0..ammount {
+                    write!(stdout(), " ").expect("Failed to write");
                 }
-                write!(stdout(), "{}", color::Bg(color::Reset));
-                write!(stdout(), "\n\n");
+                write!(stdout(), "{}", color::Bg(color::Reset)).expect("Failed to write");
+                write!(stdout(), "\n\n").expect("Failed to write");
             }
 
             return;
