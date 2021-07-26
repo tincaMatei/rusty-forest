@@ -1,4 +1,4 @@
 /target
 Cargo.lock
 *.swp
-src/*.swp
+/src/*.swp
