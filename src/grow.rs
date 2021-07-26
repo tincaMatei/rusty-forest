@@ -2,6 +2,7 @@ use std::str::FromStr;
 use std::string::ToString;
 use crate::tree::{Cell, Tree};
 use crate::display::Display;
+use crate::editor::{BACKGROUND_GREEN, FOREST_BORDERS};
 use std::time::{Duration, Instant};
 use std::io::{Read, Write, stdout};
 use std::fs::{self, DirBuilder, OpenOptions};
@@ -17,6 +18,12 @@ const POSITIVE: [&str; 2] = ["asdf", "fdas"];
 pub struct GrowthTime {
     pub h: u64,
     pub m: u64,
+}
+
+impl GrowthTime {
+    pub fn to_min(&self) -> u64 {
+        return self.h * 60 + self.m;
+    }
 }
 
 impl FromStr for GrowthTime {
@@ -98,7 +105,7 @@ pub fn grow_tree(chosen_tree: Tree, label: String, time: GrowthTime, nogui: bool
             let (width, height) = terminal_size().unwrap();
             let (width, height) = (width as usize, height as usize);
 
-            gui.clear_screen(Cell::default());
+            gui.clear_screen(BACKGROUND_GREEN);
 
             let mut returned_none = false;
             while !returned_none {
@@ -116,30 +123,30 @@ pub fn grow_tree(chosen_tree: Tree, label: String, time: GrowthTime, nogui: bool
             }
 
             if width < 25 || height < 26 {
-                gui.fit_string_to_box_hard_wrap(1, 1, width, height, Cell::new(0, 0, 0, 255, 255, 255, ' '), GROW_SMALL_SCREEN_ERROR);
+                gui.fit_string_to_box_hard_wrap(1, 1, width, height, BACKGROUND_GREEN, GROW_SMALL_SCREEN_ERROR);
             } else {
                 let middle_col = (width + 1) / 2;
                 
                 for i in 1..height+1 {
-                    gui.draw_pixel(i, 1, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(i, width, Cell::bg(255, 255, 255));
+                    gui.draw_pixel(i, 1, FOREST_BORDERS);
+                    gui.draw_pixel(i, width, FOREST_BORDERS);
                     if i < height - 7 {
-                        gui.draw_pixel(i, middle_col, Cell::bg(255, 255, 255));
+                        gui.draw_pixel(i, middle_col, FOREST_BORDERS);
                     }
                 }
                 
                 for i in 1..width + 1 {
-                    gui.draw_pixel(1, i, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(height, i, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(height - 7, i, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(9, i, Cell::bg(255, 255, 255));
+                    gui.draw_pixel(1, i, FOREST_BORDERS);
+                    gui.draw_pixel(height, i, FOREST_BORDERS);
+                    gui.draw_pixel(height - 7, i, FOREST_BORDERS);
+                    gui.draw_pixel(9, i, FOREST_BORDERS);
                 }
 
                 for i in 0..7 {
-                    gui.draw_pixel(6, middle_col - 3 + i, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(6 + i, middle_col - 3, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(12, middle_col - 3 + i, Cell::bg(255, 255, 255));
-                    gui.draw_pixel(6 + i, middle_col + 3, Cell::bg(255, 255, 255));
+                    gui.draw_pixel(6, middle_col - 3 + i, FOREST_BORDERS);
+                    gui.draw_pixel(6 + i, middle_col - 3, FOREST_BORDERS);
+                    gui.draw_pixel(12, middle_col - 3 + i, FOREST_BORDERS);
+                    gui.draw_pixel(6 + i, middle_col + 3, FOREST_BORDERS);
                 }
             
                 for l in 0..5 {
@@ -148,9 +155,9 @@ pub fn grow_tree(chosen_tree: Tree, label: String, time: GrowthTime, nogui: bool
                     }
                 }
             
-                gui.fit_string_to_box(height - 6, 2, width - 2, 6, Cell::new(0, 0, 0, 255, 255, 255, ' '), &positive_message);
-                gui.draw_string(3, 3, Cell::new(0, 0, 0, 255, 255, 255, ' '), "left:");
-                gui.draw_string(4, 3, Cell::new(0, 0, 0, 255, 255, 255, ' '), format!("{:02}:{:02}:{:02}", remaining / 3600, remaining / 60 % 60, remaining % 60).as_str());
+                gui.fit_string_to_box(height - 6, 2, width - 2, 6, FOREST_BORDERS, &positive_message);
+                gui.draw_string(3, 3, BACKGROUND_GREEN, "left:");
+                gui.draw_string(4, 3, BACKGROUND_GREEN, format!("{:02}:{:02}:{:02}", remaining / 3600, remaining / 60 % 60, remaining % 60).as_str());
             }
 
             gui.display();

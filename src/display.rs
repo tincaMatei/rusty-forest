@@ -15,6 +15,7 @@ pub struct Display {
     old_matrix: Vec<Vec<Cell> >,
     matrix: Vec<Vec<Cell> >,
     stdout: AlternateScreen<RawTerminal<Stdout> >,
+    hide_cursor: cursor::HideCursor<Stdout>,
 }
 
 impl Display {
@@ -24,7 +25,6 @@ impl Display {
         let mut matrix = vec![vec![Cell::default(); width as usize]; height as usize];
         let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
         
-        write!(screen, "{}", termion::cursor::Hide);
         write!(screen, "{}{}{}", termion::color::Fg(termion::color::Rgb(0, 0, 0)),
                                termion::color::Bg(termion::color::Rgb(0, 0, 0)),
                                termion::clear::All);
@@ -37,6 +37,7 @@ impl Display {
             old_matrix,
             matrix,
             stdout: screen,
+            hide_cursor: cursor::HideCursor::from(stdout()),
         }
     }
 
@@ -115,6 +116,10 @@ impl Display {
                     line = line + 1;
                 }
             }
+            
+            // we should go to the next line afther writing a phrase
+            col = 0;
+            line = line + 1;
         }
     }
 

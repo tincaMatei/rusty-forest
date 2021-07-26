@@ -221,7 +221,13 @@ fn main() {
             return;
         }
         };
-    
+        
+        let tree_cost = chosen_tree.cost();
+        if growth_time.to_min() < tree_cost {
+            println!("This tree is too expsensive. It needs more time ({:02}:{:02}) to grow.", tree_cost / 60, tree_cost % 60);
+            return;
+        }
+
         grow_tree(chosen_tree, label, growth_time, nogui);
     }
     "import" => { // TODO: display loaded trees data
@@ -674,7 +680,7 @@ fn main() {
             }
 
             strips_final.reverse();
-            let mut max_time = 0;
+            let mut max_time = 1;
             for stat in &strips_final {
                 max_time = cmp::max(max_time, stat.1);
             }

@@ -23,6 +23,18 @@ enum EditorState {
     NameTree,
 }
 
+pub const BACKGROUND_GREEN: Cell = Cell {
+    bg: (44, 77, 52), 
+    fg: (117, 199, 139),
+    symbol: ' ',
+};
+
+pub const FOREST_BORDERS: Cell = Cell {
+    bg: (14, 48, 23),
+    fg: (0, 0, 0),
+    symbol: ' ',
+};
+
 pub fn run_tree_editor() -> Tree {
     let mut stdin = async_stdin().bytes();
     let mut exit_program = false;
@@ -192,7 +204,7 @@ pub fn run_tree_editor() -> Tree {
             }
         }
         
-        display.clear_screen(Cell::default());
+        display.clear_screen(BACKGROUND_GREEN);
         if height < 22 || width < 30 { // The editor cannot be displayed properly
             let mut l: usize = 1;
             let mut c: usize = 1;
@@ -200,7 +212,7 @@ pub fn run_tree_editor() -> Tree {
 
             for chr in SMALL_SCREEN_ERROR.bytes() {
                 if l <= height && c <= width {
-                    display.draw_pixel(l, c, Cell { bg: (0, 0, 0), fg: (255, 255, 255), symbol: chr as char} );
+                    display.draw_pixel(l, c, BACKGROUND_GREEN.change_symbol(chr as char) );
                     c = c + 1;
                     if(c > width) {
                         c = 1;
@@ -212,20 +224,20 @@ pub fn run_tree_editor() -> Tree {
             match state {
             EditorState::EditTree => {
                 for i in 1..width+1 {
-                    display.draw_pixel(1, i, Cell::bg(255, 255, 255));
-                    display.draw_pixel(height, i, Cell::bg(255, 255, 255));
+                    display.draw_pixel(1, i, FOREST_BORDERS);
+                    display.draw_pixel(height, i, FOREST_BORDERS);
                 }
                 
                 for i in 1..height+1 {
-                    display.draw_pixel(i, 8, Cell::bg(255, 255, 255));
-                    display.draw_pixel(i, 9, Cell::bg(255, 255, 255));
+                    display.draw_pixel(i, 8, FOREST_BORDERS);
+                    display.draw_pixel(i, 9, FOREST_BORDERS);
                 }
             
                 for i in 1..7+1 {
-                    display.draw_pixel(2, i, Cell::bg(255, 255, 255));
-                    display.draw_pixel(1 + i, 1, Cell::bg(255, 255, 255));
-                    display.draw_pixel(8, i, Cell::bg(255, 255, 255));
-                    display.draw_pixel(1 + i, 7, Cell::bg(255, 255, 255));
+                    display.draw_pixel(2, i, FOREST_BORDERS);
+                    display.draw_pixel(1 + i, 1, FOREST_BORDERS);
+                    display.draw_pixel(8, i, FOREST_BORDERS);
+                    display.draw_pixel(1 + i, 7, FOREST_BORDERS);
                 }
             
                 for l in 0..5 {
@@ -234,14 +246,14 @@ pub fn run_tree_editor() -> Tree {
                     }
                 }
 
-                display.draw_string( 9, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "BG");
-                display.draw_string(10, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "Red");
-                display.draw_string(11, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "Green");
-                display.draw_string(12, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "Blue");
-                display.draw_string(15, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "FG");
-                display.draw_string(16, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "Red");
-                display.draw_string(17, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "Green");
-                display.draw_string(18, 1, Cell::new(0, 0, 0, 255, 255, 255, ' '), "Blue");
+                display.draw_string( 9, 1, BACKGROUND_GREEN, "BG");
+                display.draw_string(10, 1, BACKGROUND_GREEN, "Red");
+                display.draw_string(11, 1, BACKGROUND_GREEN, "Green");
+                display.draw_string(12, 1, BACKGROUND_GREEN, "Blue");
+                display.draw_string(15, 1, BACKGROUND_GREEN, "FG");
+                display.draw_string(16, 1, BACKGROUND_GREEN, "Red");
+                display.draw_string(17, 1, BACKGROUND_GREEN, "Green");
+                display.draw_string(18, 1, BACKGROUND_GREEN, "Blue");
                 
                 if l_tree < 5 {
                     let mut cursor_brush = brush;
@@ -249,39 +261,42 @@ pub fn run_tree_editor() -> Tree {
                     cursor_brush.symbol = '*';
                     display.draw_pixel(l_tree + 3, c_tree + 2, cursor_brush);
                 } else if 5 <= l_tree && l_tree <= 7 {
-                    display.draw_string(5 + l_tree, 6, Cell::new(0, 0, 0, 255, 255, 255, ' '), "<>");
+                    display.draw_string(5 + l_tree, 6, BACKGROUND_GREEN, "<>");
                 } else {
-                    display.draw_string(8 + l_tree, 6, Cell::new(0, 0, 0, 255, 255, 255, ' '), "<>");
+                    display.draw_string(8 + l_tree, 6, BACKGROUND_GREEN, "<>");
                 }
-            
+                
+                let cost = final_tree.cost();
+                let extended_instr = INSTRUCTIONS.to_owned() + &format!("\n\nTree cost: {:02}:{:02}", cost / 60, cost % 60);
+
                 display.fit_string_to_box(2, 10, width - 9, height - 2, 
-                    Cell::new(0, 0, 0, 255, 255, 255, ' '), INSTRUCTIONS);
+                    BACKGROUND_GREEN, &extended_instr);
                 
                 brush.symbol = ' ';
                 display.draw_pixel(height - 1, 10, brush);
                 display.draw_pixel(height - 1, 11, brush);
                 
-                display.draw_string(height - 1, 12, Cell::new(0, 0, 0, 255, 255, 255, ' '),
+                display.draw_string(height - 1, 12, BACKGROUND_GREEN,
                     &format!("BG: {:?}", brush.bg));
                 
                 display.draw_pixel(height - 2, 10, Cell::bg(brush.fg.0, brush.fg.1, brush.fg.2));
                 display.draw_pixel(height - 2, 11, Cell::bg(brush.fg.0, brush.fg.1, brush.fg.2));
 
-                display.draw_string(height - 2, 12, Cell::new(0, 0, 0, 255, 255, 255, ' '),
+                display.draw_string(height - 2, 12, BACKGROUND_GREEN,
                     &format!("FG: {:?}", brush.fg));
             }
             EditorState::NameTree => {
                 for i in 1..width+1 {
-                    display.draw_pixel(1, i, Cell::bg(255, 255, 255));
-                    display.draw_pixel(6, i, Cell::bg(255, 255, 255));
-                    display.draw_pixel(height, i, Cell::bg(255, 255, 255));
+                    display.draw_pixel(1, i, FOREST_BORDERS);
+                    display.draw_pixel(6, i, FOREST_BORDERS);
+                    display.draw_pixel(height, i, FOREST_BORDERS);
                 }
                 for i in 1..height+1 {
-                    display.draw_pixel(i, 1, Cell::bg(255, 255, 255));
-                    display.draw_pixel(i, width, Cell::bg(255, 255, 255));
+                    display.draw_pixel(i, 1, FOREST_BORDERS);
+                    display.draw_pixel(i, width, FOREST_BORDERS);
                 }
-                display.fit_string_to_box(2, 2, width - 2, 4, Cell::new(0, 0, 0, 255, 255, 255, ' '), &banner);
-                display.fit_string_to_box_hard_wrap(7, 2, width - 2, height - 6, Cell::new(0, 0, 0, 255, 255, 255, ' '), &final_tree.name);
+                display.fit_string_to_box(2, 2, width - 2, 4, BACKGROUND_GREEN, &banner);
+                display.fit_string_to_box_hard_wrap(7, 2, width - 2, height - 6, BACKGROUND_GREEN, &final_tree.name);
             
                 let curs_lin = str_cursor / (width - 2) + 7;
                 let curs_col = str_cursor % (width - 2) + 2;
@@ -293,6 +308,7 @@ pub fn run_tree_editor() -> Tree {
         display.display();
         thread::sleep(Duration::from_millis(50));
     }
+
 
     return final_tree;
 }

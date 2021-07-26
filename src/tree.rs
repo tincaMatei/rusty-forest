@@ -6,6 +6,7 @@ use std::fs::{self, File, DirBuilder, OpenOptions};
 use regex::Regex;
 use std::env;
 use std::default::Default;
+use std::cmp;
 use crate::grow::GrowthTime;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -29,6 +30,14 @@ impl Cell {
             bg: (r, g, b),
             fg: (0, 0, 0),
             symbol: ' ',
+        }
+    }
+    
+    pub fn change_symbol(&self, chr: char) -> Cell {
+        Cell {
+            bg: self.bg,
+            fg: self.fg,
+            symbol: chr,
         }
     }
 }
@@ -126,8 +135,27 @@ impl Tree {
     pub fn is_legit(tree: &String) -> bool {
         Regex::new("^[A-Fa-f0-9]{350}:[-_ a-zA-Z0-9]+$").unwrap().is_match(tree)
     }
-}
+    
+    pub fn cost(&self) -> u64 {
+        let base_cost = 15;
+        let (mut sum_red_bg, mut sum_blue_bg): (u64, u64) = (0, 0);
+        let (mut sum_red_fg, mut sum_blue_fg): (u64, u64) = (0, 0);
+        for l in 0..5 {
+            for c in 0..5 {
+                sum_red_bg = sum_red_bg + (self.cells[l][c].bg.0 as u64);
+                sum_red_fg = sum_red_fg + (self.cells[l][c].fg.0 as u64);
+            
+                sum_blue_bg = sum_blue_bg + (self.cells[l][c].bg.2 as u64);
+                sum_blue_fg = sum_blue_fg + (self.cells[l][c].fg.2 as u64);
+            }
+        }
+        
+        let bg_cost = ((cmp::max(sum_red_bg, sum_blue_bg) as f64 / (255.0 * 5.0 * 5.0) * 12.0).floor() as u64) * 5;
+        let fg_cost = ((cmp::max(sum_red_fg, sum_blue_fg) as f64 / (255.0 * 5.0 * 5.0) *  8.0).floor() as u64) * 5;
 
+        base_cost + bg_cost + fg_cost
+    }
+}
 
 impl ToString for Tree {
     fn to_string(&self) -> String {
