@@ -1,8 +1,10 @@
 [package]
 name = "rusty-forest"
 version = "0.1.0"
-authors = ["DankusMemusXXX <14098249+tincaMatei@users.noreply.github.com>"]
+authors = ["TincaMatei <tinca.matei02@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A small terminal application based on the Forest app for mobile."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
