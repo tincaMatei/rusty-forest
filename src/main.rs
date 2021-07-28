@@ -202,6 +202,7 @@ fn build_import_opts() -> Options {
     opts.optopt("f", "file", "import trees from the file; using this, TREE should be omitted", "FILE");
     opts.optflag("c", "create", "open the tree editor; using this, TREE should be omitted");
     opts.optflag("n", "name-change", "change names to avoid duplicate names; without this, duplicate names are ignored");
+    opts.optflag("e", "error", "display error messages when importing trees");
     opts
 }
 
@@ -393,6 +394,8 @@ fn main() {
         }
         
         let duped = matches.opt_present("n");
+        
+        let write_errors = matches.opt_present("e");
 
         // get the content to import
         let content = if let Some(x) = matches.opt_str("f") {
@@ -408,14 +411,30 @@ fn main() {
             }
             matches.free
         };
-    
+        
+        let mut loaded: usize = 0;
+        let mut tree_name: Vec<String> = Vec::new();
+
         for tree in content {
             let res = trees.add_tree(tree.clone(), duped);
-            if let Err(x) = res {
-                println!("Failed to add tree: {}", x);
+            match res {
+            Err(x) => {
+                if write_errors {
+                    eprintln!("Failed to add tree: {}", x);
+                }
+            }
+            Ok(x) => {
+                tree_name.push(x.name);
+                loaded = loaded + 1;
+            }
             }
         }
         
+        println!("Loaded {} trees in total:", loaded);
+        for new_name in tree_name {
+            println!("{}", new_name);
+        }
+
         trees.save()
             .expect("Failed to save trees");
     }

@@ -250,9 +250,8 @@ impl TreeCollection {
 
     /// Add a tree to the tree collection, and be careful to not add a duplicate tree.
     /// If duped is true, the tree will be renamed to not collide with other trees.
-    pub fn add_tree(&mut self, tree: String, duped: bool) -> Result<(), String> {
+    pub fn add_tree(&mut self, tree: String, duped: bool) -> Result<Tree, String> {
         let mut tree = Tree::import_tree(tree)?;
-       
 
         let mut cnt = 0;
         let mut failed = true;
@@ -283,8 +282,8 @@ impl TreeCollection {
             tree.name = tree.name + &format!("-{}", cnt);
         }
 
-        self.collection.push(tree);
-        Ok(())
+        self.collection.push(tree.clone());
+        Ok(tree)
     }
 
     /// Save all trees in `~/.rusty-forest/trees.conf`.
