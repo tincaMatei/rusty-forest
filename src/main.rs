@@ -65,6 +65,8 @@
 //!   * Rename the trees if they have the same name. For instance, if there is a tree called 
 //!     "tree", and you want to add another tree named "tree", the second one will be renamed 
 //!     to "tree-1"
+//! * -e, --error
+//!   * Display error messages about loading trees in stderr
 //!
 //! ### export
 //!
@@ -156,7 +158,7 @@ pub mod display;
 pub mod grow;
 
 /// rusty-forest version number.
-const VERSION: &str = "0.1.1";
+const VERSION: &str = "0.1.2";
 
 /// Print the entire usage of the program.
 fn print_whole_usage(program: &str, opts: Options) {

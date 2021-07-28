@@ -65,6 +65,8 @@ Options:
   * Rename the trees if they have the same name. For instance, if there is a tree called 
     "tree", and you want to add another tree named "tree", the second one will be renamed 
     to "tree-1"
+* -e, --error
+  * Display error messages about loading trees in stderr
 
 ### export
 
