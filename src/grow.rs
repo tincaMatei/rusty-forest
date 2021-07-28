@@ -165,7 +165,7 @@ pub fn grow_tree(chosen_tree: Tree, label: String, time: GrowthTime, nogui: bool
                     }
                 }
             
-                gui.fit_string_to_box(height - 6, 2, width - 2, 6, FOREST_BORDERS, &positive_message);
+                gui.fit_string_to_box(height - 6, 2, width - 2, 6, BACKGROUND_GREEN, &positive_message);
                 gui.draw_string(3, 3, BACKGROUND_GREEN, "left:");
                 gui.draw_string(4, 3, BACKGROUND_GREEN, format!("{:02}:{:02}:{:02}", remaining / 3600, remaining / 60 % 60, remaining % 60).as_str());
             }
